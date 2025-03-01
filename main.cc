@@ -29,9 +29,9 @@ void main()
 {
     const float scale = 3.1415926 * 2 / 1.5;
     float ratio = scale * time;
-    // vec2 offset = vec2(cos(ratio) / 2, sin(ratio) / 2);
+    vec2 offset = vec2(cos(ratio), sin(ratio));
 
-    gl_Position = projection * vec4(pos, 1);
+    gl_Position = projection * vec4(pos + vec3(offset, 0), 1);
     color = in_color;
 }
 )src";
@@ -53,6 +53,8 @@ void main()
     X(PFNGLGENBUFFERSPROC, glGenBuffers) \
     X(PFNGLBINDBUFFERPROC, glBindBuffer) \
     X(PFNGLBUFFERDATAPROC, glBufferData) \
+    X(PFNGLGENVERTEXARRAYSPROC, glGenVertexArrays) \
+    X(PFNGLBINDVERTEXARRAYPROC, glBindVertexArray) \
     X(PFNGLENABLEVERTEXATTRIBARRAYPROC, glEnableVertexAttribArray) \
     X(PFNGLVERTEXATTRIBPOINTERPROC, glVertexAttribPointer) \
     X(PFNGLCREATESHADERPROC, glCreateShader) \
@@ -151,25 +153,25 @@ int main() {
 
     load_gl_procs();
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
+    // glFrontFace(GL_CW);
 
     float piramid_vertices[] = {
         // front face
         -0.5, -0.5, -2,
-        0, 0.5, -2,
+        0, 0.5, -3,
         0.5, -0.5, -2,
 
         // left face
-        0, 0.5, -2,
-        0, -0.5, -4,
         -0.5, -0.5, -2,
+        0, 0.5, -3,
+        0, -0.5, -4,
 
         // right face
         0.5, -0.5, -2,
+        0, 0.5, -3,
         0, -0.5, -4,
-        0, 0.5, -2,
 
         // colors
         1, 0, 0,
@@ -285,6 +287,11 @@ int main() {
     };
 
 #define vertices piramid_vertices
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+
+    glBindVertexArray(vao);
 
     GLuint vbo;
     glGenBuffers(1, &vbo);
