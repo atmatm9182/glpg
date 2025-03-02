@@ -29,9 +29,9 @@ void main()
 {
     const float scale = 3.1415926 * 2 / 1.5;
     float ratio = scale * time;
-    vec2 offset = vec2(cos(ratio), sin(ratio));
+    vec3 offset = vec3(cos(ratio), sin(ratio), 0);
 
-    gl_Position = projection * vec4(pos + vec3(offset, 0), 1);
+    gl_Position = projection * vec4(pos + offset, 1);
     color = in_color;
 }
 )src";
@@ -152,6 +152,13 @@ int main() {
     glfwSetWindowSizeCallback(window, window_size_callback);
 
     load_gl_procs();
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LEQUAL);
+    glDepthRange(0.0, 1.0);
+
+    glEnable(GL_DEPTH_CLAMP);
 
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_BACK);
@@ -335,7 +342,8 @@ int main() {
 
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.8f, 0.f, 0.5f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearDepth(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         double time = glfwGetTime();
 
