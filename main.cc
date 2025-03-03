@@ -1,8 +1,11 @@
-#include <GLFW/glfw3.h>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <cmath>
+
 #include <source_location>
+
+#include <GLFW/glfw3.h>
 
 #define cast(t) (t)
 #define discard(x) (void) (x)
@@ -128,7 +131,32 @@ GLuint create_program(GLuint vert, GLuint frag) {
     return prog;
 }
 
-float aspect_ratio = (float)WIN_WIDTH / (float)WIN_HEIGHT;
+const float aspect_ratio = (float)WIN_WIDTH / (float)WIN_HEIGHT;
+
+struct Mat4 {
+    float elems[16];
+};
+
+Mat4 projection(float fov_x, float z_near, float z_far) {
+    Mat4 mat{};
+
+    const float deg_to_rad = M_PI * 2 / 360.0;
+    const float angle = fov_x * deg_to_rad / 2;
+    float tangent = tanf(angle);
+
+    float right = z_near * tangent;
+    float top = right / aspect_ratio;
+
+    mat.elems[0] = z_near / right;
+    mat.elems[5] = z_near / top;
+    // mat.elems[0] = 1 / tangent;
+    // mat.elems[5] = 1 / tangent;
+    mat.elems[10] = (z_far + z_near) / (z_near - z_far);
+    mat.elems[11] = -1;
+    mat.elems[14] = (2 * z_far * z_near) / (z_near - z_far);
+
+    return mat;
+}
 
 extern "C" void window_size_callback(GLFWwindow* win, int width, int height) {
     discard(win);
@@ -321,22 +349,15 @@ int main() {
 
     glUseProgram(prog);
 
-    float mat[16];
-    memset(mat, 0, sizeof(mat));
-
-    const float frustum_scale = 0.5;
+    const float fov_x = 45.0;
     const float z_far = 5.0;
     const float z_near = 2.0;
 
-    mat[0] = frustum_scale / aspect_ratio;
-    mat[5] = frustum_scale;
-    mat[10] = (z_far + z_near) / (z_near - z_far);
-    mat[11] = -1;
-    mat[14] = (2 * z_far * z_near) / (z_near - z_far);
+    Mat4 projection_mat = projection(fov_x, z_near, z_far);
 
     auto projection_loc = glGetUniformLocation(prog, "projection");
 
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, mat);
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection_mat.elems);
 
     auto time_loc = glGetUniformLocation(prog, "time");
 
